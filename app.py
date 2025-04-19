@@ -5,11 +5,16 @@ from job_fetcher import JobFetcher
 from email_sender import EmailSender
 from scheduler import JobScheduler
 from user_settings import UserSettings
-
-
-import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
+
+
+st.set_page_config(
+    page_title="기획자 채용 알리미",
+    page_icon="💼",
+    layout="wide"
+)
+
 
 # ✅ 디버깅 코드 시작
 try:
@@ -23,13 +28,6 @@ except Exception as e:
     st.sidebar.error(f"접속 실패 ❌: {e}")
 # ✅ 디버깅 코드 끝
 
-
-
-st.set_page_config(
-    page_title="기획자 채용 알리미",
-    page_icon="💼",
-    layout="wide"
-)
 
 if st.secrets:
     st.sidebar.success("Secrets 설정이 완료되었습니다!")
