@@ -21,10 +21,17 @@ class JobScheduler:
         
         notification_settings = self.user_settings.get_notification_settings()
         for time in notification_settings['times']:
-            schedule.every().day.at(time).do(self.check_and_send_alerts)
+            try:
+                # 시간 형식이 올바른지 확인
+                datetime.strptime(time, "%H:%M")
+                schedule.every().day.at(time).do(self.check_and_send_alerts)
+            except ValueError as e:
+                logging.error(f"Invalid time format: {time}")
+                st.error(f"잘못된 시간 형식입니다: {time}")
         
         self.thread = threading.Thread(target=self._run_schedule, daemon=True)
         self.thread.start()
+    
     
     def stop(self):
         self.running = False
