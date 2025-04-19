@@ -6,6 +6,25 @@ from email_sender import EmailSender
 from scheduler import JobScheduler
 from user_settings import UserSettings
 
+
+import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+
+# ✅ 디버깅 코드 시작
+try:
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("job-alert-settings")
+    tabs = [ws.title for ws in sheet.worksheets()]
+    st.sidebar.success(f"접속 성공 ✅ 시트 탭 목록: {tabs}")
+except Exception as e:
+    st.sidebar.error(f"접속 실패 ❌: {e}")
+# ✅ 디버깅 코드 끝
+
+
+
 st.set_page_config(
     page_title="기획자 채용 알리미",
     page_icon="💼",
