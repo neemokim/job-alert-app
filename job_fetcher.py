@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+import streamlit as st  # streamlit import 추가
 import logging
 from datetime import datetime
 
@@ -15,22 +16,18 @@ class JobFetcher:
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
-        
-        # Streamlit Cloud 환경을 위한 추가 설정
         chrome_options.add_argument("--disable-software-rasterizer")
         chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--remote-debugging-port=9222")
         
         try:
-            service = Service(ChromeDriverManager().install())
+            service = Service()
             self.driver = webdriver.Chrome(
-                service=service,
                 options=chrome_options
             )
         except Exception as e:
             logging.error(f"Chrome driver initialization failed: {e}")
-            # 에러 발생 시 사용자에게 알림
-            st.error("브라우저 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.")
+            # 에러 메시지 변경
+            logging.error(str(e))
             self.driver = None
         
         self.companies = {
@@ -58,6 +55,7 @@ class JobFetcher:
     
     def fetch_all_jobs(self, keywords=None):
         if self.driver is None:
+            st.warning("브라우저 초기화에 실패했습니다. 채용 정보를 가져올 수 없습니다.")
             return []
             
         all_jobs = []
@@ -66,7 +64,8 @@ class JobFetcher:
                 jobs = self._fetch_company_jobs(company, info["url"], info["logo"], keywords)
                 all_jobs.extend(jobs)
         finally:
-            self.driver.quit()
+            if self.driver:
+                self.driver.quit()
         return all_jobs
     
     def _fetch_company_jobs(self, company, url, logo_url, keywords):
