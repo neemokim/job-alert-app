@@ -45,7 +45,7 @@ def save_user_settings(email, active, times, frequency, career):
 
 # --- 크롤링 필터용 키워드 목록 불러오기 ---
 def read_admin_keywords():
-    sheet = connect_to_sheet("keywords")
+    sheet = connect_to_sheet("user_settings", "keywords")
     return [row[0] for row in sheet.get_all_values()[1:] if row and row[0].strip()]
 
 # --- 크롤링 대상 기업 정보 불러오기 ---
