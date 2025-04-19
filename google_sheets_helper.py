@@ -54,11 +54,23 @@ def write_notification_settings(data):
     ws.append_row(["시간", "빈도"])
     for time in data["times"]:
         ws.append_row([time, data["frequency"]])
-def normalize_time_format(time_str):
-    parts = time_str.strip().split(":")
-    if len(parts) == 2:
-        hour = parts[0].zfill(2)
-        minute = parts[1].zfill(2)
-        return f"{hour}:{minute}"
-    return time_str
 
+def read_notification_settings():
+    sheet = connect_to_gsheet("job-alert-settings")
+    ws = sheet.worksheet("notification")
+    values = ws.get_all_values()[1:]  # 첫 행은 헤더니까 제외
+
+    times = []
+    frequency = "하루 1회"
+
+    for row in values:
+        if len(row) >= 1:
+            normalized_time = normalize_time_format(row[0])
+            times.append(normalized_time)
+        if len(row) >= 2:
+            frequency = row[1]
+
+    return {
+        "times": times,
+        "frequency": frequency
+    }
