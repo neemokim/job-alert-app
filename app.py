@@ -77,7 +77,8 @@ def main():
     
     # 탭 생성
     tab1, tab2 = st.tabs(["📋 채용 공고", "⚙️ 설정"])
-    
+    notification_times = st.session_state.get("notification_times", [])
+
     with tab1:
         col1, col2 = st.columns([3,1])
         with col1:
@@ -188,9 +189,10 @@ def main():
                 "오전 8:30", "오전 9:00", "오전 10:00",
                 "오후 2:00", "오후 6:00", "오후 9:00"
             ],
-            default=["오전 9:00"],
+            default=notification_times,  # session 값 사용
             max_selections=2
         )
+        st.session_state.notification_times = notification_times  # 다시 저장
         with col2:
             notification_frequency = st.radio(
                 "알림 빈도",
