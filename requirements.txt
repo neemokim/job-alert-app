@@ -18,3 +18,9 @@ beautifulsoup4==4.12.2
 
 # HTTP 클라이언트 라이브러리 - 웹 요청 처리에 사용
 requests==2.31.0
+
+
+# Selenium 관련 패키지
+selenium==4.18.1
+webdriver-manager==4.0.1
+chromedriver-autoinstaller==0.6.3
