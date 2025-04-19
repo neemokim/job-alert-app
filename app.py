@@ -5,8 +5,7 @@ from job_fetcher import JobFetcher
 from email_sender import EmailSender
 from scheduler import JobScheduler
 from user_settings import UserSettings
-import gspread
-from google.oauth2.service_account import Credentials
+
 
 
 st.set_page_config(
@@ -15,8 +14,10 @@ st.set_page_config(
     layout="wide"
 )
 
+# ✅ 그다음에 디버깅 코드나 gspread 등 넣기
+import gspread
+from google.oauth2.service_account import Credentials
 
-# ✅ 디버깅 코드 시작
 try:
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
@@ -26,8 +27,6 @@ try:
     st.sidebar.success(f"접속 성공 ✅ 시트 탭 목록: {tabs}")
 except Exception as e:
     st.sidebar.error(f"접속 실패 ❌: {e}")
-# ✅ 디버깅 코드 끝
-
 
 if st.secrets:
     st.sidebar.success("Secrets 설정이 완료되었습니다!")
