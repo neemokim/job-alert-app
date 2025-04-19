@@ -2,18 +2,11 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import logging
-# 디버그: Secrets 확인
-st.write("### Secrets 디버그")
-try:
-    st.write("1. Secrets 키 목록:", list(st.secrets.keys()))
-    st.write("2. secrets._secrets_dict:", st.secrets._secrets_dict)
-except Exception as e:
-    st.write("에러 발생:", str(e))
-
 from job_fetcher import JobFetcher
 from email_sender import EmailSender
 from scheduler import JobScheduler
 from user_settings import UserSettings
+
 
 # 페이지 설정
 st.set_page_config(
@@ -22,6 +15,11 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# 간단한 디버그 (secrets 확인)
+if st.secrets:
+    st.sidebar.success("Secrets 설정이 완료되었습니다!")
+    
 # CSS 스타일
 st.markdown("""
 <style>
