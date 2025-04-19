@@ -1,10 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
-import requests
+from webdriver_manager.chrome import ChromeDriverManager
 import logging
 from datetime import datetime
 
@@ -14,7 +14,24 @@ class JobFetcher:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        self.driver = webdriver.Chrome(options=chrome_options)
+        chrome_options.add_argument("--disable-gpu")
+        
+        # Streamlit Cloud 환경을 위한 추가 설정
+        chrome_options.add_argument("--disable-software-rasterizer")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+        
+        try:
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(
+                service=service,
+                options=chrome_options
+            )
+        except Exception as e:
+            logging.error(f"Chrome driver initialization failed: {e}")
+            # 에러 발생 시 사용자에게 알림
+            st.error("브라우저 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.")
+            self.driver = None
         
         self.companies = {
             "네이버": {
@@ -40,6 +57,9 @@ class JobFetcher:
         }
     
     def fetch_all_jobs(self, keywords=None):
+        if self.driver is None:
+            return []
+            
         all_jobs = []
         try:
             for company, info in self.companies.items():
