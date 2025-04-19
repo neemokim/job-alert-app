@@ -1,5 +1,5 @@
 streamlit
-schedule
-beautifulsoup4
-requests
-yagmail
+schedule # 예약 실행 (매일 08:30 / 21:00)
+beautifulsoup4 # 웹에서 채용공고 크롤링
+requests # 웹에서 채용공고 크롤링
+yagmail # 이메일 발송
