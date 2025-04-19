@@ -1,5 +1,20 @@
-streamlit # 웹앱 만들기
-schedule # 예약 실행 (매일 08:30 / 21:00)
-beautifulsoup4 # 웹에서 채용공고 크롤링
-requests # 웹에서 채용공고 크롤링
-yagmail # 이메일 발송
+# 웹 애플리케이션 UI 프레임워크 - 대시보드 구현에 사용
+streamlit==1.31.1
+
+# 웹 브라우저 자동화 도구 - 동적 웹페이지(채용공고) 크롤링에 사용
+selenium==4.18.1
+
+# Selenium WebDriver 자동 관리 도구 - 브라우저 드라이버 설치/업데이트 자동화
+webdriver-manager==4.0.1
+
+# 작업 스케줄링 라이브러리 - 정해진 시간에 채용공고 검색 및 이메일 발송
+schedule==1.2.1
+
+# 환경변수 관리 도구 - 이메일 계정 등 민감한 정보 관리
+python-dotenv==1.0.1
+
+# HTML 파싱 라이브러리 - 웹페이지 내용 추출에 사용
+beautifulsoup4==4.12.2
+
+# HTTP 클라이언트 라이브러리 - 웹 요청 처리에 사용
+requests==2.31.0
