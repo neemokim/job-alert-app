@@ -50,7 +50,7 @@ class JobScheduler:
 
     def _get_all_users(self):
         from google_sheets_helper import connect_to_sheet
-        sheet = connect_to_sheet("user_settings", "userinfo")
+        sheet = connect_to_sheet("job-alert-settings", "userinfos")
         return sheet.get_all_records()
 
     def run_pending(self):
