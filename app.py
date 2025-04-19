@@ -78,6 +78,7 @@ def main():
     # 탭 생성
     tab1, tab2 = st.tabs(["📋 채용 공고", "⚙️ 설정"])
     notification_times = st.session_state.get("notification_times", [])
+    st.session_state.notification_times = ["오전 9:00"]  # ✅ 기본값 설정
 
     with tab1:
         col1, col2 = st.columns([3,1])
