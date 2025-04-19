@@ -1,0 +1,5 @@
+streamlit
+schedule
+beautifulsoup4
+requests
+yagmail
