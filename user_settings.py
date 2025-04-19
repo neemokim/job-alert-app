@@ -5,10 +5,17 @@ class UserSettings:
     def __init__(self):
         # 이메일 설정 초기화
         if 'email_settings' not in st.session_state:
-            st.session_state.email_settings = {
-                'sender_email': st.secrets["SENDER_EMAIL"],
-                'sender_password': st.secrets["SENDER_PASSWORD"],
-            }
+            try:
+                st.session_state.email_settings = {
+                    'sender_email': st.secrets["SENDER_EMAIL"],
+                    'sender_password': st.secrets["SENDER_PASSWORD"],
+                }
+            except Exception as e:
+                st.warning("이메일 설정이 필요합니다. Settings에서 Secrets를 설정해주세요.")
+                st.session_state.email_settings = {
+                    'sender_email': "",
+                    'sender_password': "",
+                }
         
         # 알림 설정 초기화
         if 'notification_settings' not in st.session_state:
