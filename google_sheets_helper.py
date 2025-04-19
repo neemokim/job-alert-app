@@ -2,6 +2,14 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 
+def normalize_time_format(time_str):
+    parts = time_str.strip().split(":")
+    if len(parts) == 2:
+        hour = parts[0].zfill(2)
+        minute = parts[1].zfill(2)
+        return f"{hour}:{minute}"
+    return time_str
+
 def connect_to_gsheet(sheet_name: str):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(
@@ -38,14 +46,6 @@ def write_keywords(keywords):
     ws.append_row(["키워드"])
     for k in keywords:
         ws.append_row([k])
-
-def read_notification_settings():
-    sheet = connect_to_gsheet("job-alert-settings")
-    ws = sheet.worksheet("notification")
-    values = ws.get_all_values()[1:]
-    times = [v[0] for v in values]
-    frequency = values[0][1] if values else "하루 1회"
-    return {"times": times, "frequency": frequency}
 
 def write_notification_settings(data):
     sheet = connect_to_gsheet("job-alert-settings")
