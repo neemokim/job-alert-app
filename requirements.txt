@@ -21,3 +21,12 @@ requests==2.31.0
 
 # Chrome 드라이버 자동 설치
 chromedriver-autoinstaller==0.6.3
+
+# 이메일 발송용 라이브러리 (Gmail 기반 SMTP)
+yagmail==0.15.293
+
+# Google Sheets 연동 - 시트 읽기/쓰기 기능
+gspread==5.12.0
+
+# Google 인증용 OAuth 2.0 클라이언트
+oauth2client==4.1.3
