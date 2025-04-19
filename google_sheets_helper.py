@@ -54,4 +54,11 @@ def write_notification_settings(data):
     ws.append_row(["시간", "빈도"])
     for time in data["times"]:
         ws.append_row([time, data["frequency"]])
+def normalize_time_format(time_str):
+    parts = time_str.strip().split(":")
+    if len(parts) == 2:
+        hour = parts[0].zfill(2)
+        minute = parts[1].zfill(2)
+        return f"{hour}:{minute}"
+    return time_str
 
