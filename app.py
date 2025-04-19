@@ -176,37 +176,57 @@ def main():
                         st.success("채용공고가 추가되었습니다!")
         
         # 수신자 관리
-        st.write("#### 📧 수신자 관리")
-        receivers = st.data_editor(
-            pd.DataFrame(
-                user_settings.get_receivers(),
-                columns=["이메일 주소", "활성화"]
-            ),
-            column_config={
-                "이메일 주소": st.column_config.TextColumn(
-                    "이메일 주소",
-                    help="수신자 이메일 주소",
-                    validate="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-                ),
-                "활성화": st.column_config.CheckboxColumn(
-                    "활성화",
-                    help="체크 시 알림을 받습니다",
-                    default=True
-                )
-            },
-            num_rows="dynamic",
-            use_container_width=True
-        )
+        st.write("#### 📧 이메일 등록 및 수신 거부")
+        
+        new_email = st.text_input("이메일 주소 입력", placeholder="example@domain.com")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📩 이메일 추가", use_container_width=True):
+                receivers = user_settings.get_receivers()
+                email_list = [r["이메일 주소"] for r in receivers]
+        
+                if not new_email:
+                    st.warning("이메일을 입력해주세요.")
+                elif new_email in email_list:
+                    st.warning("이미 등록된 이메일입니다.")
+                elif "@" not in new_email or "." not in new_email:
+                    st.error("올바른 이메일 형식이 아닙니다.")
+                else:
+                    receivers.append({"이메일 주소": new_email, "활성화": True})
+                    user_settings.update_receivers(receivers)
+                    st.success("이메일이 추가되었습니다.")
+        
+        with col2:
+            if st.button("🛑 수신 거부", use_container_width=True):
+                receivers = user_settings.get_receivers()
+                updated = False
+        
+                for r in receivers:
+                    if r["이메일 주소"] == new_email:
+                        if not r["활성화"]:
+                            st.info("이미 수신 거부된 이메일입니다.")
+                        else:
+                            r["활성화"] = False
+                            updated = True
+                            st.success("수신 거부 처리되었습니다.")
+                        break
+                else:
+                    st.warning("등록되지 않은 이메일입니다.")
+        
+                if updated:
+                    user_settings.update_receivers(receivers)
+        
 
-        if st.button("설정 저장", type="primary"):
+        if st.button("💾 설정 저장", type="primary"):
             user_settings.update_notification_settings(
                 times=notification_times,
                 frequency=notification_frequency
             )
             user_settings.update_keywords([k.strip() for k in keywords if k.strip()])
-            user_settings.update_receivers(receivers.to_dict('records'))
             st.success("설정이 저장되었습니다!")
             scheduler.restart()
-
+            
 if __name__ == "__main__":
     main()
