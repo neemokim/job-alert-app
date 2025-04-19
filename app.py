@@ -134,16 +134,19 @@ def main():
     with tab2:
         st.write("### ⚙️ 알림 설정")
         
-        # 알림 시간 설정
-        st.write("#### 📅 알림 시간 설정")
-        col1, col2 = st.columns(2)
-        with col1:
-            notification_times = st.multiselect(
-                "알림 받을 시간 선택 (최대 2회)",
-                ["오전 8:30", "오전 9:00", "오전 10:00", "오후 2:00", "오후 6:00", "오후 9:00"],
-                default=["오전 9:00"],
-                max_selections=2
-            )
+    # 알림 시간 설정
+    st.write("#### 📅 알림 시간 설정")
+    col1, col2 = st.columns(2)
+    with col1:
+        notification_times = st.multiselect(
+            "알림 받을 시간 선택 (최대 2회)",
+            [
+                "오전 8:30", "오전 9:00", "오전 10:00",
+                "오후 2:00", "오후 6:00", "오후 9:00"
+            ],
+            default=["오전 9:00"],
+            max_selections=2
+        )
         with col2:
             notification_frequency = st.radio(
                 "알림 빈도",
