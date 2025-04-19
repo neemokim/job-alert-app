@@ -17,10 +17,10 @@ class UserSettings:
                     'sender_password': "",
                 }
         
-        # 알림 설정 초기화
+        # 알림 설정 초기화 (24시간 형식으로 변경)
         if 'notification_settings' not in st.session_state:
             st.session_state.notification_settings = {
-                'times': ["오전 9:00"],
+                'times': ["09:00"],  # 24시간 형식으로 변경
                 'frequency': "하루 1회"
             }
         
@@ -79,3 +79,25 @@ class UserSettings:
     
     def update_receivers(self, receivers):
         st.session_state.receivers = receivers
+
+    def _convert_to_24h_format(self, time_str):
+        """시간을 24시간 형식으로 변환"""
+        if "오전" in time_str:
+            time = time_str.replace("오전 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour == 12:
+                hour = 0
+        else:  # 오후
+            time = time_str.replace("오후 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour != 12:
+                hour += 12
+        return f"{hour:02d}:{minute:02d}"
+
+    def update_notification_settings(self, times, frequency):
+        # 시간을 24시간 형식으로 변환
+        converted_times = [self._convert_to_24h_format(time) for time in times]
+        st.session_state.notification_settings = {
+            'times': converted_times,
+            'frequency': frequency
+        }
