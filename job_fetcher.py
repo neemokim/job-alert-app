@@ -4,8 +4,8 @@ from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 class JobFetcher:
@@ -13,9 +13,11 @@ class JobFetcher:
         self.company_info = get_company_settings()
         self.keywords = get_keywords()
 
-    def fetch_all_jobs(self, keywords=None):
+    def fetch_all_jobs(self, keywords=None, career_filter=None):
         if keywords is None:
             keywords = self.keywords
+        if career_filter is None:
+            career_filter = ["경력", "신입/경력", "경력무관"]
 
         results = []
         for company in self.company_info:
@@ -32,7 +34,7 @@ class JobFetcher:
             else:
                 jobs = []
 
-            filtered = self._filter_jobs(jobs, keywords)
+            filtered = self._filter_jobs(jobs, keywords, career_filter)
             for job in filtered:
                 job["company"] = name
             results.extend(filtered)
@@ -58,48 +60,42 @@ class JobFetcher:
                     "deadline": "상시채용"
                 })
             return jobs
-        except:
+        except Exception as e:
+            print(f"requests 오류: {e}")
             return []
 
     def _fetch_jobs_by_selenium(self, domain):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=chrome_options)
         jobs = []
-
         try:
+            options = Options()
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
             driver.get(domain)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            time.sleep(2)
-
+            time.sleep(3)
             links = driver.find_elements(By.TAG_NAME, "a")
-            for link in links:
-                try:
-                    title = link.text.strip()
-                    href = link.get_attribute("href")
-                    if not title or not href:
-                        continue
-                    jobs.append({
-                        "title": title,
-                        "description": title,
-                        "link": href,
-                        "career": "경력무관",
-                        "deadline": "상시채용"
-                    })
-                except:
+            for a in links:
+                title = a.text.strip()
+                href = a.get_attribute("href")
+                if not title or not href:
                     continue
-        except:
-            pass
-        finally:
+                jobs.append({
+                    "title": title,
+                    "description": title,
+                    "link": href,
+                    "career": "경력무관",
+                    "deadline": "상시채용"
+                })
             driver.quit()
-
+        except Exception as e:
+            print(f"셀레니움 오류: {e}")
         return jobs
 
-    def _filter_jobs(self, jobs, keywords):
+    def _filter_jobs(self, jobs, keywords, career_filter):
         return [
             job for job in jobs
             if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
+            and job.get('career', '경력무관') in career_filter
         ]
