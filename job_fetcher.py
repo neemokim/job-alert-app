@@ -4,8 +4,8 @@ from google_sheets_helper import read_company_settings, get_keywords
 
 class JobFetcher:
     def __init__(self):
-        self.company_info = read_company_settings()
-        self.keywords = get_keywords()  # 캐시된 키워드 (60초 유효)
+        self.company_info = get_company_settings()  # ✅ 캐시된 회사 정보
+        self.keywords = get_keywords()              # ✅ 캐시된 키워드
 
     def fetch_all_jobs(self, keywords=None):
         if keywords is None:
