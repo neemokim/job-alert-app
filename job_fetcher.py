@@ -1,93 +1,101 @@
-import streamlit as st
-from datetime import datetime
-from google_sheets_helper import (
-    load_user_settings,
-    save_user_settings,
-    read_admin_keywords,
-    connect_to_sheet
-)
+import requests
+from bs4 import BeautifulSoup
+from google_sheets_helper import get_company_settings, get_keywords
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
-class UserSettings:
+class JobFetcher:
     def __init__(self):
-        self.email = None
-        self.settings = None
-        self.keywords = read_admin_keywords()
+        self.company_info = get_company_settings()
+        self.keywords = get_keywords()
 
-    def set_email(self, email):
-        self.email = email
-        self.settings = load_user_settings(email)
+    def fetch_all_jobs(self, keywords=None):
+        if keywords is None:
+            keywords = self.keywords
 
-    def is_active(self):
-        if self.settings:
-            return self.settings.get("active", False)
-        return False
+        results = []
+        for company in self.company_info:
+            domain = company.get("크롤링 URL 도메인")
+            method = company.get("크롤링 방식", "requests").lower()
+            if not domain:
+                continue
+            name = company.get("회사명", "")
 
-    def get_keywords(self):
-        return self.keywords
+            if method == "requests":
+                jobs = self._fetch_jobs_by_requests(domain)
+            elif method == "selenium":
+                jobs = self._fetch_jobs_by_selenium(domain)
+            else:
+                jobs = []
 
-    def get_notification_settings(self):
-        if not self.settings:
-            return {
-                "times": ["09:00"],
-                "frequency": "하루 1회",
-                "career": "경력"
-            }
-        return {
-            "times": self.settings.get("times", ["09:00"]),
-            "frequency": self.settings.get("frequency", "하루 1회"),
-            "career": self.settings.get("career", "경력")
-        }
+            filtered = self._filter_jobs(jobs, keywords)
+            for job in filtered:
+                job["company"] = name
+            results.extend(filtered)
 
-    def update_notification_settings(self, times, frequency, career):
-        if self.email:
-            active = self.settings.get("active", True) if self.settings else True
-            save_user_settings(self.email, active, times, frequency, career)
-            self.settings = load_user_settings(self.email)
+        return results
 
-    def set_active(self, active):
-        if self.email:
-            current = self.get_notification_settings()
-            save_user_settings(
-                self.email, active,
-                current["times"],
-                current["frequency"],
-                current["career"]
+    def _fetch_jobs_by_requests(self, domain):
+        try:
+            res = requests.get(domain, timeout=10)
+            soup = BeautifulSoup(res.text, "html.parser")
+            links = soup.find_all("a")
+            jobs = []
+            for a in links:
+                title = a.get_text(strip=True)
+                href = a.get("href")
+                if not title or not href:
+                    continue
+                jobs.append({
+                    "title": title,
+                    "description": title,
+                    "link": href if href.startswith("http") else domain.rstrip("/") + href,
+                    "career": "경력무관",
+                    "deadline": "상시채용"
+                })
+            return jobs
+        except:
+            return []
+
+    def _fetch_jobs_by_selenium(self, domain):
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        driver = webdriver.Chrome(options=options)
+        jobs = []
+        try:
+            driver.get(domain)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "a"))
             )
-            self.settings = load_user_settings(self.email)
+            links = driver.find_elements(By.TAG_NAME, "a")
+            for a in links:
+                title = a.text.strip()
+                href = a.get_attribute("href")
+                if not title or not href:
+                    continue
+                jobs.append({
+                    "title": title,
+                    "description": title,
+                    "link": href,
+                    "career": "경력무관",
+                    "deadline": "상시채용"
+                })
+        except:
+            pass
+        finally:
+            driver.quit()
+        return jobs
 
-    def get_email(self):
-        return self.email
-
-    def get_manual_jobs(self):
-        if 'manual_jobs' not in st.session_state:
-            st.session_state.manual_jobs = []
-        return st.session_state.manual_jobs
-
-    def get_receivers(self):
-        sheet = connect_to_sheet("job-alert-settings", "userinfos")
-        return sheet.get_all_records()
-
-    def update_receivers(self, receivers):
-        sheet = connect_to_sheet("job-alert-settings", "userinfos")
-        sheet.clear()
-        sheet.append_row(["이메일 주소", "활성화", "알림 시간", "알림 빈도", "경력 구분"])
-        for r in receivers:
-            sheet.append_row([
-                r.get("이메일 주소"),
-                str(r.get("활성화", True)).upper(),
-                r.get("알림 시간", ""),
-                r.get("알림 빈도", "하루 1회"),
-                r.get("경력 구분", "경력")
-            ])
-
-    def add_manual_job(self, url):
-        st.session_state.manual_jobs.append({
-            'company': "수동 추가",
-            'company_logo': "https://via.placeholder.com/50",
-            'title': "수동 추가된 채용공고",
-            'description': url,
-            'link': url,
-            'career': "경력무관",
-            'deadline': "상시채용",
-            'added_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
+    def _filter_jobs(self, jobs, keywords):
+        return [
+            job for job in jobs
+            if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
+        ]
