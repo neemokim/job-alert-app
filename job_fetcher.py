@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from google_sheets_helper import read_company_settings, get_keywords
+from google_sheets_helper import get_company_settings, get_keywords
 
 class JobFetcher:
     def __init__(self):
