@@ -6,7 +6,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
-import chromedriver_autoinstaller
 import time
 
 class JobFetcher:
@@ -14,6 +13,16 @@ class JobFetcher:
         self.company_info = get_company_settings()
         self.keywords = get_keywords()
 
+    def _setup_driver(self):
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+
+        # ✅ 명시적으로 드라이버 경로 지정
+        driver_path = '/usr/bin/chromedriver'  # Streamlit Cloud 기준 기본 설치 위치
+        return webdriver.Chrome(service=Service(driver_path), options=options)
+        
     def fetch_all_jobs(self, keywords=None, career_filter=None):
         if keywords is None:
             keywords = self.keywords
