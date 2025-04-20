@@ -101,8 +101,6 @@ if st.button("❌ 수신 거부"):
 st.divider()
 if st.button("🔄 지금 채용 공고 발송"):
     with st.spinner("채용 공고 수집 및 발송중..."):
-        keywords = user_settings.get_keywords()
-        jobs = job_fetcher.fetch_all_jobs(keywords)
         try:
             receivers = user_settings.get_receivers()
         except AttributeError:
@@ -113,9 +111,18 @@ if st.button("🔄 지금 채용 공고 발송"):
             receivers = []
 
         active_receivers = [r for r in receivers if r.get("활성화")]
-        if jobs and active_receivers:
+        if active_receivers:
             for r in active_receivers:
-                email_sender.send_email(r["이메일 주소"], jobs)
+                # 사용자별 경력 필터
+                career = r.get("경력 구분", "경력")
+                career_filter = [career]  # 리스트 형태로 넘기기
+                keywords = user_settings.get_keywords()
+
+                jobs = job_fetcher.fetch_all_jobs(keywords=keywords, career_filter=career_filter)
+
+                if jobs:
+                    email_sender.send_email(r["이메일 주소"], jobs)
+
             st.success("모든 사용자에게 이메일이 발송되었습니다!")
         else:
             st.info("보낼 공고나 대상자가 없습니다.")
