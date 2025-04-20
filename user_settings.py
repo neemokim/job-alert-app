@@ -76,8 +76,8 @@ class UserSettings:
                 r.get("이메일 주소"),
                 str(r.get("활성화", True)).upper(),
                 r.get("알림 시간", ""),
-                r.get("빈도", "하루 1회"),
-                r.get("신입/경력", "경력")
+                r.get("알림 빈도", "하루 1회"),
+                r.get("경력 구분", "경력")
             ])
 
     def add_manual_job(self, url):
