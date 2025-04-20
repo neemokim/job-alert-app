@@ -1,14 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
-from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 import time
+from google_sheets_helper import get_company_settings, get_keywords
 
 class JobFetcher:
     def __init__(self):
@@ -18,8 +14,6 @@ class JobFetcher:
     def fetch_all_jobs(self, keywords=None, career_filter=None):
         if keywords is None:
             keywords = self.keywords
-        if career_filter is None:
-            career_filter = ["경력", "신입/경력", "경력무관"]
 
         results = []
         for company in self.company_info:
@@ -32,7 +26,7 @@ class JobFetcher:
             if method == "requests":
                 jobs = self._fetch_jobs_by_requests(domain)
             elif method == "selenium":
-                jobs = self._fetch_jobs_by_selenium(domain)
+                jobs = self._fetch_jobs_by_samsung(domain)
             else:
                 jobs = []
 
@@ -62,46 +56,53 @@ class JobFetcher:
                     "deadline": "상시채용"
                 })
             return jobs
-        except Exception as e:
-            print("requests 오류:", e)
+        except:
             return []
 
-    def _fetch_jobs_by_selenium(self, domain):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
+    def _fetch_jobs_by_samsung(self, domain):
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        driver = webdriver.Chrome(options=options)
 
         jobs = []
         try:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
             driver.get(domain)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "a")))
-            time.sleep(2)
-            links = driver.find_elements(By.TAG_NAME, "a")
-            for a in links:
-                try:
-                    title = a.text.strip()
-                    href = a.get_attribute("href")
-                    if not title or not href or "no=" not in href:
-                        continue
-                    jobs.append({
-                        "title": title,
-                        "description": title,
-                        "link": href,
-                        "career": "경력무관",
-                        "deadline": "상시채용"
-                    })
-                except:
+            time.sleep(3)
+            job_elements = driver.find_elements(By.CSS_SELECTOR, 'li[onclick^="fn_view"]')
+            for el in job_elements:
+                onclick = el.get_attribute("onclick")
+                if not onclick or "fn_view" not in onclick:
                     continue
-            driver.quit()
+
+                no = onclick.split("fn_view(")[1].split(")")[0]
+                url = f"https://www.samsungcareers.com/hr/?no={no}"
+                title = el.find_element(By.CLASS_NAME, "title").text.strip()
+                dept = el.find_element(By.CLASS_NAME, "dept").text.strip()
+                try:
+                    desc = el.find_element(By.CLASS_NAME, "summary").text.strip()
+                except:
+                    desc = ""
+
+                job = {
+                    "title": f"{title} - {dept}",
+                    "description": desc,
+                    "link": url,
+                    "career": "경력무관",
+                    "deadline": "상시채용"
+                }
+                jobs.append(job)
         except Exception as e:
-            print("셀레니움 오류:", e)
+            print(f"셀레니움 오류: {e}")
+        finally:
+            driver.quit()
+
         return jobs
 
     def _filter_jobs(self, jobs, keywords, career_filter):
         return [
             job for job in jobs
             if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
-            and job.get('career', '경력무관') in career_filter
+            and (not career_filter or job.get('career', '경력무관') in career_filter)
         ]
