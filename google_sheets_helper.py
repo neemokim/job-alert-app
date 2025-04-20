@@ -3,7 +3,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 
 # --- 인증 및 시트 연결 ---
-@st.cache_data(ttl=60) # 1분 동안 캐싱
+@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
 def connect_to_sheet(sheet_name, tab_name):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(
@@ -49,7 +49,7 @@ def read_admin_keywords():
     sheet = connect_to_sheet("job-alert-settings", "keywords")
     return [row[0] for row in sheet.get_all_values()[1:] if row and row[0].strip()]
 
-@st.cache_data(ttl=60)  # ✅ 60초 동안 캐싱
+@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
 def get_keywords():
     return read_admin_keywords()
     
@@ -58,6 +58,6 @@ def read_company_settings():
     sheet = connect_to_sheet("job-alert-settings", "settings")
     return sheet.get_all_records()
     
-@st.cache_data(ttl=60)  # ✅ 60초 동안 캐싱
+@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
 def get_company_settings():
     return read_company_settings()
