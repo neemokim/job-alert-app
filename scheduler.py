@@ -37,20 +37,20 @@ class JobScheduler:
                 schedule.every().day.at(self._normalize_time(t)).do(self._run_job, email=user["이메일 주소"])
 
     def _normalize_time(self, time_str):
-    """'오전 9:00' 또는 '오후 1:30' 같은 시간 문자열을 'HH:MM' 포맷으로 바꿔줌"""
-    if "오전" in time_str:
-        time = time_str.replace("오전 ", "")
-        hour, minute = map(int, time.split(":"))
-        if hour == 12:
-            hour = 0
-    elif "오후" in time_str:
-        time = time_str.replace("오후 ", "")
-        hour, minute = map(int, time.split(":"))
-        if hour != 12:
-            hour += 12
-    else:
-        hour, minute = map(int, time_str.strip().split(":"))  # 24시간 포맷
-    return f"{hour:02d}:{minute:02d}"
+        """'오전 9:00' 또는 '오후 1:30' 같은 시간 문자열을 'HH:MM' 포맷으로 바꿔줌"""
+        if "오전" in time_str:
+            time = time_str.replace("오전 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour == 12:
+                hour = 0
+        elif "오후" in time_str:
+            time = time_str.replace("오후 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour != 12:
+                hour += 12
+        else:
+            hour, minute = map(int, time_str.strip().split(":"))  # 24시간 포맷
+        return f"{hour:02d}:{minute:02d}"
 
 
     def _get_all_users(self):
