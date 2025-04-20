@@ -3,6 +3,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 
 # --- 인증 및 시트 연결 ---
+@st.cache_data(ttl=60) # 1분 동안 캐싱
 def connect_to_sheet(sheet_name, tab_name):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(
