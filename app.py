@@ -41,6 +41,9 @@ if st.button("📩 알림 신청하기"):
     else:
         try:
             receivers = user_settings.get_receivers()
+        except AttributeError:
+            st.error("user_settings에 get_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+            receivers = []
         except Exception as e:
             st.error(f"알림 신청 정보를 불러올 수 없습니다: {e}")
             receivers = []
@@ -56,8 +59,13 @@ if st.button("📩 알림 신청하기"):
                 "신입/경력": career_option,
                 "활성화": True
             })
-            user_settings.update_receivers(receivers)
-            st.success("알림 신청이 완료되었습니다.")
+            try:
+                user_settings.update_receivers(receivers)
+                st.success("알림 신청이 완료되었습니다.")
+            except AttributeError:
+                st.error("user_settings에 update_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+            except Exception as e:
+                st.error(f"알림 수신자 저장 실패: {e}")
 
 # --- 수신 거부 ---
 st.divider()
@@ -66,6 +74,9 @@ unsub_email = st.text_input("수신 거부할 이메일 입력", key="unsubscrib
 if st.button("❌ 수신 거부"):
     try:
         receivers = user_settings.get_receivers()
+    except AttributeError:
+        st.error("user_settings에 get_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+        receivers = []
     except Exception as e:
         st.error(f"수신 거부 정보를 불러올 수 없습니다: {e}")
         receivers = []
@@ -76,8 +87,13 @@ if st.button("❌ 수신 거부"):
             r["활성화"] = False
             found = True
     if found:
-        user_settings.update_receivers(receivers)
-        st.success("수신 거부 처리되었습니다.")
+        try:
+            user_settings.update_receivers(receivers)
+            st.success("수신 거부 처리되었습니다.")
+        except AttributeError:
+            st.error("user_settings에 update_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+        except Exception as e:
+            st.error(f"수신 거부 저장 실패: {e}")
     else:
         st.warning("등록되지 않은 이메일입니다.")
 
@@ -89,6 +105,9 @@ if st.button("🔄 지금 채용 공고 발송"):
         jobs = job_fetcher.fetch_all_jobs(keywords)
         try:
             receivers = user_settings.get_receivers()
+        except AttributeError:
+            st.error("user_settings에 get_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+            receivers = []
         except Exception as e:
             st.error(f"수신자 목록을 불러올 수 없습니다: {e}")
             receivers = []
