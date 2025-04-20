@@ -1,61 +1,93 @@
-import requests
-from bs4 import BeautifulSoup
-from google_sheets_helper import get_company_settings, get_keywords
+import streamlit as st
+from datetime import datetime
+from google_sheets_helper import (
+    load_user_settings,
+    save_user_settings,
+    read_admin_keywords,
+    connect_to_sheet
+)
 
-class JobFetcher:
+class UserSettings:
     def __init__(self):
-        self.company_info = get_company_settings()  # ✅ 캐시된 회사 정보
-        self.keywords = get_keywords()              # ✅ 캐시된 키워드
+        self.email = None
+        self.settings = None
+        self.keywords = read_admin_keywords()
 
-    def fetch_all_jobs(self, keywords=None, career_filter=None):
-        if keywords is None:
-            keywords = self.keywords
-        if career_filter is None:
-            career_filter = ["경력", "신입/경력", "경력무관"]  # 기본값
+    def set_email(self, email):
+        self.email = email
+        self.settings = load_user_settings(email)
 
-        results = []
-        for company in self.company_info:
-            domain = company.get("크롤링 URL 도메인")
-            if not domain:
-                continue
-            company_name = company["회사명"]
+    def is_active(self):
+        if self.settings:
+            return self.settings.get("active", False)
+        return False
 
-            jobs = self._fetch_jobs_from_domain(domain)
-            filtered = self._filter_jobs(jobs, keywords, career_filter)
+    def get_keywords(self):
+        return self.keywords
 
-            for job in filtered:
-                job["company"] = company_name
-            results.extend(filtered)
+    def get_notification_settings(self):
+        if not self.settings:
+            return {
+                "times": ["09:00"],
+                "frequency": "하루 1회",
+                "career": "경력"
+            }
+        return {
+            "times": self.settings.get("times", ["09:00"]),
+            "frequency": self.settings.get("frequency", "하루 1회"),
+            "career": self.settings.get("career", "경력")
+        }
 
-        return results
+    def update_notification_settings(self, times, frequency, career):
+        if self.email:
+            active = self.settings.get("active", True) if self.settings else True
+            save_user_settings(self.email, active, times, frequency, career)
+            self.settings = load_user_settings(self.email)
 
-    def _fetch_jobs_from_domain(self, domain):
-        try:
-            res = requests.get(f"https://{domain}", timeout=5)
-            soup = BeautifulSoup(res.text, "html.parser")
-            links = soup.find_all("a")
-            jobs = []
-            for a in links:
-                title = a.get_text(strip=True)
-                href = a.get("href")
-                if not href or not title:
-                    continue
-                jobs.append({
-                    "title": title,
-                    "description": title,
-                    "link": href if href.startswith("http") else f"https://{domain}{href}",
-                    "career": "경력무관",
-                    "deadline": "상시채용"
-                })
-            return jobs
-        except:
-            return []
-
-    def _filter_jobs(self, jobs, keywords, career_filter):
-        return [
-            job for job in jobs
-            if (
-                any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
-                and job.get('career', '경력무관') in career_filter
+    def set_active(self, active):
+        if self.email:
+            current = self.get_notification_settings()
+            save_user_settings(
+                self.email, active,
+                current["times"],
+                current["frequency"],
+                current["career"]
             )
-        ]
+            self.settings = load_user_settings(self.email)
+
+    def get_email(self):
+        return self.email
+
+    def get_manual_jobs(self):
+        if 'manual_jobs' not in st.session_state:
+            st.session_state.manual_jobs = []
+        return st.session_state.manual_jobs
+
+    def get_receivers(self):
+        sheet = connect_to_sheet("job-alert-settings", "userinfos")
+        return sheet.get_all_records()
+
+    def update_receivers(self, receivers):
+        sheet = connect_to_sheet("job-alert-settings", "userinfos")
+        sheet.clear()
+        sheet.append_row(["이메일 주소", "활성화", "알림 시간", "알림 빈도", "경력 구분"])
+        for r in receivers:
+            sheet.append_row([
+                r.get("이메일 주소"),
+                str(r.get("활성화", True)).upper(),
+                r.get("알림 시간", ""),
+                r.get("알림 빈도", "하루 1회"),
+                r.get("경력 구분", "경력")
+            ])
+
+    def add_manual_job(self, url):
+        st.session_state.manual_jobs.append({
+            'company': "수동 추가",
+            'company_logo': "https://via.placeholder.com/50",
+            'title': "수동 추가된 채용공고",
+            'description': url,
+            'link': url,
+            'career': "경력무관",
+            'deadline': "상시채용",
+            'added_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
