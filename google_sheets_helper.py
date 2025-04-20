@@ -1,13 +1,11 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import streamlit as st
-
-# --- 인증 및 시트 연결 ---
-@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
 def connect_to_sheet(sheet_name, tab_name):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(
-        st.secrets["gcp_service_account"], scope
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scope
     )
     client = gspread.authorize(creds)
     return client.open(sheet_name).worksheet(tab_name)
