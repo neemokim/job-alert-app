@@ -77,6 +77,7 @@ class JobFetcher:
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
         jobs = []
@@ -89,17 +90,23 @@ class JobFetcher:
                     title = elem.find_element(By.CSS_SELECTOR, 'strong').text.strip()
                     link = elem.find_element(By.TAG_NAME, 'a').get_attribute('href')
                     deadline = elem.find_element(By.CSS_SELECTOR, '.close-day').text.strip()
+                    company_name = elem.find_element(By.CSS_SELECTOR, '.company').text.strip() if elem.find_elements(By.CSS_SELECTOR, '.company') else "삼성"
+
+                    if link and not link.startswith("http"):
+                        link = "https://www.samsungcareers.com" + link
+
                     jobs.append({
                         "title": title,
                         "description": title,
                         "link": link,
                         "career": "경력무관",
-                        "deadline": deadline if deadline else "상시채용"
+                        "deadline": deadline if deadline else "상시채용",
+                        "company": company_name
                     })
                 except:
                     continue
         except Exception as e:
-            print("셀레니움 오류:", e)
+            print("삼성 셀레니움 오류:", e)
         finally:
             driver.quit()
         return jobs
@@ -108,6 +115,7 @@ class JobFetcher:
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
         jobs = []
@@ -120,6 +128,7 @@ class JobFetcher:
                     title = elem.find_element(By.CSS_SELECTOR, 'strong.tit').text.strip()
                     link = elem.find_element(By.TAG_NAME, 'a').get_attribute('href')
                     deadline = elem.find_element(By.CSS_SELECTOR, '.date').text.strip()
+
                     jobs.append({
                         "title": title,
                         "description": title,
@@ -139,6 +148,7 @@ class JobFetcher:
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
         jobs = []
