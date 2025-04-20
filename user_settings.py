@@ -61,7 +61,13 @@ class UserSettings:
         if 'manual_jobs' not in st.session_state:
             st.session_state.manual_jobs = []
         return st.session_state.manual_jobs
-
+    def get_receivers(self):
+        return st.session_state.receivers
+    
+    def update_receivers(self, receivers):
+        st.session_state.receivers = receivers
+        write_receivers(receivers)
+    
     def add_manual_job(self, url):
         st.session_state.manual_jobs.append({
             'company': "수동 추가",
@@ -73,3 +79,4 @@ class UserSettings:
             'deadline': "상시채용",
             'added_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
+
