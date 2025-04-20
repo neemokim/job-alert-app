@@ -111,13 +111,6 @@ def main():
                         st.session_state.last_check = datetime.now()
                         st.session_state.last_jobs = jobs
 
-        st.sidebar.title("필터 설정")
-        career_filter = st.sidebar.multiselect(
-            "경력 선택",
-            ["경력", "신입/경력", "경력무관"],
-            default=["경력", "신입/경력"]
-        )
-
         if 'last_jobs' in st.session_state:
             all_jobs = st.session_state.last_jobs + user_settings.get_manual_jobs()
             filtered_jobs = [
