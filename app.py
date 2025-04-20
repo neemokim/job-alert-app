@@ -80,13 +80,16 @@ def main():
     companies = st.sidebar.multiselect(
         "회사 선택",
         ["네이버", "네이버파이낸셜", "삼성전자", "구글코리아", "SKT"],
-        default=["네이버", "네이버파이낸셜"]
+        default=["네이버", "네이버파이낸셜"],
+        key="companies"
     )
+
     career_filter = st.sidebar.multiselect(
         "경력 선택",
         ["경력", "신입/경력", "경력무관"],
-        default=["경력", "신입/경력"]
-    )   
+        default=["경력", "신입/경력"],
+        key="career_filter"
+    )
             # ✅ 2. 기존 main 코드 진행
     user_settings = UserSettings()
     job_fetcher = JobFetcher()
