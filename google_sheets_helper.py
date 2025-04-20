@@ -51,7 +51,7 @@ def read_admin_keywords():
         st.error(f"키워드 시트 불러오기 실패: {e}")
         return []
 
-@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
+@st.cache_data(ttl=6000, show_spinner=False)
 def get_keywords():
     return read_admin_keywords()
     
@@ -60,6 +60,6 @@ def read_company_settings():
     sheet = connect_to_sheet("job-alert-settings", "settings")
     return sheet.get_all_records()
     
-@st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
+@st.cache_data(ttl=6000, show_spinner=False)
 def get_company_settings():
     return read_company_settings()
