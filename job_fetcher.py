@@ -3,10 +3,11 @@ from bs4 import BeautifulSoup
 from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
+from webdriver_manager.chrome import ChromeDriverManager
 
 class JobFetcher:
     def __init__(self):
@@ -62,23 +63,19 @@ class JobFetcher:
             return []
 
     def _fetch_jobs_by_selenium(self, domain):
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=options)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         jobs = []
         try:
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
             driver.get(domain)
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.TAG_NAME, "a"))
-            )
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "a")))
             links = driver.find_elements(By.TAG_NAME, "a")
-            for a in links:
-                title = a.text.strip()
-                href = a.get_attribute("href")
+            for link in links:
+                title = link.text.strip()
+                href = link.get_attribute("href")
                 if not title or not href:
                     continue
                 jobs.append({
@@ -88,10 +85,9 @@ class JobFetcher:
                     "career": "경력무관",
                     "deadline": "상시채용"
                 })
-        except:
-            pass
-        finally:
             driver.quit()
+        except Exception as e:
+            print(f"Selenium error: {e}")
         return jobs
 
     def _filter_jobs(self, jobs, keywords):
