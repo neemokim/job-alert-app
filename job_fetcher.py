@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_autoinstaller
 import time
 
 class JobFetcher:
@@ -48,6 +49,14 @@ class JobFetcher:
 
         return results
 
+    def _setup_driver(self):
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        chromedriver_autoinstaller.install()
+        return webdriver.Chrome(options=options)
+
     def _fetch_jobs_by_requests(self, domain):
         try:
             res = requests.get(domain, timeout=10)
@@ -74,12 +83,7 @@ class JobFetcher:
         return []
 
     def _fetch_samsung_jobs(self, domain):
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-
+        driver = self._setup_driver()
         jobs = []
         try:
             driver.get(domain)
@@ -112,12 +116,7 @@ class JobFetcher:
         return jobs
 
     def _fetch_naver_jobs(self, domain):
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-
+        driver = self._setup_driver()
         jobs = []
         try:
             driver.get(domain)
@@ -145,12 +144,7 @@ class JobFetcher:
         return jobs
 
     def _fetch_google_jobs(self, domain):
-        options = Options()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-
+        driver = self._setup_driver()
         jobs = []
         try:
             driver.get(domain)
