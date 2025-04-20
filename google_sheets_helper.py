@@ -46,8 +46,12 @@ def save_user_settings(email, active, times, frequency, career):
 
 # --- 크롤링 필터용 키워드 목록 불러오기 ---
 def read_admin_keywords():
-    sheet = connect_to_sheet("job-alert-settings", "keywords")
-    return [row[0] for row in sheet.get_all_values()[1:] if row and row[0].strip()]
+    try:
+        sheet = connect_to_sheet("job-alert-settings", "keywords")
+        return [row[0] for row in sheet.get_all_values()[1:] if row and row[0].strip()]
+    except Exception as e:
+        st.error(f"키워드 시트 불러오기 실패: {e}")
+        return []
 
 @st.cache_data(ttl=6000)  # ✅ 1시간 캐싱
 def get_keywords():
