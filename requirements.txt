@@ -25,7 +25,7 @@ yagmail==0.15.293
 # Google Sheets 연동 - 시트 읽기/쓰기 기능
 # Google Sheets API 관련
 gspread==5.12.0
-google-auth==2.22.0  
+google-auth==2.20.0  
 
 # HTTP 클라이언트 라이브러리 - 웹 요청 처리에 사용
 requests==2.31.0
