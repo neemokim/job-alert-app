@@ -68,3 +68,6 @@ def read_company_settings():
 @st.cache_data(ttl=6000, show_spinner=False)
 def get_company_settings():
     return read_company_settings()
+
+def read_receivers():
+    return connect_to_sheet("job-alert-settings", "userinfos").get_all_records()
