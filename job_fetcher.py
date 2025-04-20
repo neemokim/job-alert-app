@@ -3,18 +3,17 @@ from bs4 import BeautifulSoup
 from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import time
 
 class JobFetcher:
     def __init__(self):
         self.company_info = get_company_settings()
         self.keywords = get_keywords()
 
-    def fetch_all_jobs(self, keywords=None):
+    def fetch_all_jobs(self, keywords=None, career_filter=None):
         if keywords is None:
             keywords = self.keywords
 
@@ -33,7 +32,7 @@ class JobFetcher:
             else:
                 jobs = []
 
-            filtered = self._filter_jobs(jobs, keywords)
+            filtered = self._filter_jobs(jobs, keywords, career_filter)
             for job in filtered:
                 job["company"] = name
             results.extend(filtered)
@@ -63,15 +62,17 @@ class JobFetcher:
             return []
 
     def _fetch_jobs_by_selenium(self, domain):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
         jobs = []
         try:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
             driver.get(domain)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "a")))
+            time.sleep(3)
+
             links = driver.find_elements(By.TAG_NAME, "a")
             for link in links:
                 title = link.text.strip()
@@ -85,13 +86,18 @@ class JobFetcher:
                     "career": "경력무관",
                     "deadline": "상시채용"
                 })
-            driver.quit()
-        except Exception as e:
-            print(f"Selenium error: {e}")
+        except:
+            pass
+        finally:
+            try:
+                driver.quit()
+            except:
+                pass
         return jobs
 
-    def _filter_jobs(self, jobs, keywords):
+    def _filter_jobs(self, jobs, keywords, career_filter):
         return [
             job for job in jobs
             if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
+            and (not career_filter or job.get('career', '경력무관') in career_filter)
         ]
