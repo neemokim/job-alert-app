@@ -64,19 +64,18 @@ class JobFetcher:
     def _fetch_jobs_by_selenium(self, domain):
         jobs = []
         try:
-            chrome_options = Options()
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
+            options = Options()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             driver.get(domain)
-            time.sleep(3)
-
+            time.sleep(3)  # 사이트 로딩 대기
+            
             links = driver.find_elements(By.TAG_NAME, "a")
-            for link in links:
-                title = link.text.strip()
-                href = link.get_attribute("href")
+            for a in links:
+                title = a.text.strip()
+                href = a.get_attribute("href")
                 if not title or not href:
                     continue
                 jobs.append({
@@ -86,16 +85,12 @@ class JobFetcher:
                     "career": "경력무관",
                     "deadline": "상시채용"
                 })
-        except:
-            pass
-        finally:
-            try:
-                driver.quit()
-            except:
-                pass
+            driver.quit()
+        except Exception as e:
+            print("셀레니움 오류:", e)
         return jobs
 
-    def _filter_jobs(self, jobs, keywords, career_filter):
+    def _filter_jobs(self, jobs, keywords, career_filter=None):
         return [
             job for job in jobs
             if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
