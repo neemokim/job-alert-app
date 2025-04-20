@@ -16,9 +16,6 @@ python-dotenv==1.0.1
 # HTML 파싱 라이브러리 - 웹페이지 내용 추출에 사용
 beautifulsoup4==4.12.2
 
-# HTTP 클라이언트 라이브러리 - 웹 요청 처리에 사용
-requests==2.31.0
-
 # Chrome 드라이버 자동 설치
 chromedriver-autoinstaller==0.6.3
 
@@ -29,6 +26,8 @@ yagmail==0.15.293
 # Google Sheets API 관련
 gspread==5.12.0
 google-auth==2.22.0
+
+# HTTP 클라이언트 라이브러리 - 웹 요청 처리에 사용
 requests==2.31.0
 
 # Google 인증용 OAuth 2.0 클라이언트
