@@ -76,6 +76,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
+      # ✅ 1. 필터 변수 먼저 선언 (탭 바깥)
+    companies = st.sidebar.multiselect(
+        "회사 선택",
+        ["네이버", "네이버파이낸셜", "삼성전자", "구글코리아", "SKT"],
+        default=["네이버", "네이버파이낸셜"]
+    )
+    career_filter = st.sidebar.multiselect(
+        "경력 선택",
+        ["경력", "신입/경력", "경력무관"],
+        default=["경력", "신입/경력"]
+        
+            # ✅ 2. 기존 main 코드 진행
     user_settings = UserSettings()
     job_fetcher = JobFetcher()
     email_sender = EmailSender()
