@@ -4,8 +4,8 @@ from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 class JobFetcher:
@@ -13,7 +13,7 @@ class JobFetcher:
         self.company_info = get_company_settings()
         self.keywords = get_keywords()
 
-    def fetch_all_jobs(self, keywords=None, career_filter=None):
+    def fetch_all_jobs(self, keywords=None):
         if keywords is None:
             keywords = self.keywords
 
@@ -32,7 +32,7 @@ class JobFetcher:
             else:
                 jobs = []
 
-            filtered = self._filter_jobs(jobs, keywords, career_filter)
+            filtered = self._filter_jobs(jobs, keywords)
             for job in filtered:
                 job["company"] = name
             results.extend(filtered)
@@ -62,37 +62,44 @@ class JobFetcher:
             return []
 
     def _fetch_jobs_by_selenium(self, domain):
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+
+        driver = webdriver.Chrome(options=chrome_options)
         jobs = []
+
         try:
-            options = Options()
-            options.add_argument("--headless")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--no-sandbox")
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
             driver.get(domain)
-            time.sleep(3)  # 사이트 로딩 대기
-            
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            time.sleep(2)
+
             links = driver.find_elements(By.TAG_NAME, "a")
-            for a in links:
-                title = a.text.strip()
-                href = a.get_attribute("href")
-                if not title or not href:
+            for link in links:
+                try:
+                    title = link.text.strip()
+                    href = link.get_attribute("href")
+                    if not title or not href:
+                        continue
+                    jobs.append({
+                        "title": title,
+                        "description": title,
+                        "link": href,
+                        "career": "경력무관",
+                        "deadline": "상시채용"
+                    })
+                except:
                     continue
-                jobs.append({
-                    "title": title,
-                    "description": title,
-                    "link": href,
-                    "career": "경력무관",
-                    "deadline": "상시채용"
-                })
+        except:
+            pass
+        finally:
             driver.quit()
-        except Exception as e:
-            print("셀레니움 오류:", e)
+
         return jobs
 
-    def _filter_jobs(self, jobs, keywords, career_filter=None):
+    def _filter_jobs(self, jobs, keywords):
         return [
             job for job in jobs
             if any(keyword.lower() in (job['title'] + job['description']).lower() for keyword in keywords)
-            and (not career_filter or job.get('career', '경력무관') in career_filter)
         ]
