@@ -3,14 +3,12 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
-from datetime import datetime
-import yagmail
-
 
 class EmailSender:
     def __init__(self, smtp_server="smtp.gmail.com", smtp_port=587):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
+
     def send_email(self, receiver_email, jobs):
         email_settings = {
             "sender_email": st.secrets["SENDER_EMAIL"],
@@ -19,22 +17,21 @@ class EmailSender:
         }
         self.send_job_alerts(jobs, email_settings)
 
-    
     def send_job_alerts(self, jobs, email_settings):
         if not jobs:
             return
-            
+
         try:
             for receiver in email_settings['receivers']:
                 if not receiver['활성화']:
                     continue
-                    
+
                 message = self._create_email_message(
-                    jobs, 
+                    jobs,
                     email_settings['sender_email'],
                     receiver['이메일 주소']
                 )
-                
+
                 with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                     server.starttls()
                     server.login(
@@ -42,24 +39,24 @@ class EmailSender:
                         email_settings['sender_password']
                     )
                     server.send_message(message)
-                    
+
                 logging.info(f"Successfully sent job alerts to {receiver['이메일 주소']}")
-            
+
         except Exception as e:
             logging.error(f"Failed to send email: {e}")
-    
+
     def _create_email_message(self, jobs, sender_email, receiver_email):
         message = MIMEMultipart()
         message["Subject"] = f"새로운 채용 공고 알림 ({len(jobs)}건)"
         message["From"] = sender_email
         message["To"] = receiver_email
-        
+
         html_content = self._create_html_content(jobs)
         message.attach(MIMEText(html_content, "html"))
-        
+
         return message
-    
-     def _create_html_content(self, jobs):
+
+    def _create_html_content(self, jobs):
         html = """
         <html>
             <head>
@@ -101,7 +98,6 @@ class EmailSender:
             <body>
                 <h2>📣 신규 채용 공고 알림</h2>
         """
-    
         for job in jobs:
             html += f"""
             <div class="job-card">
@@ -111,10 +107,8 @@ class EmailSender:
                 <div>🔗 <a href="{job['link']}" target="_blank">공고 바로가기</a></div>
             </div>
             """
-    
         html += """
             </body>
         </html>
         """
         return html
-
