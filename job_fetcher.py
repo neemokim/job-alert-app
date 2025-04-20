@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
+from google_sheets_helper import get_company_settings, get_keywords
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import time
-from google_sheets_helper import get_company_settings, get_keywords
 
 class JobFetcher:
     def __init__(self):
@@ -26,7 +26,7 @@ class JobFetcher:
             if method == "requests":
                 jobs = self._fetch_jobs_by_requests(domain)
             elif method == "selenium":
-                jobs = self._fetch_jobs_by_samsung(domain)
+                jobs = self._fetch_jobs_by_selenium(domain)
             else:
                 jobs = []
 
@@ -59,7 +59,7 @@ class JobFetcher:
         except:
             return []
 
-    def _fetch_jobs_by_samsung(self, domain):
+    def _fetch_jobs_by_selenium(self, domain):
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
@@ -70,31 +70,29 @@ class JobFetcher:
         try:
             driver.get(domain)
             time.sleep(3)
-            job_elements = driver.find_elements(By.CSS_SELECTOR, 'li[onclick^="fn_view"]')
-            for el in job_elements:
-                onclick = el.get_attribute("onclick")
-                if not onclick or "fn_view" not in onclick:
-                    continue
 
-                no = onclick.split("fn_view(")[1].split(")")[0]
-                url = f"https://www.samsungcareers.com/hr/?no={no}"
-                title = el.find_element(By.CLASS_NAME, "title").text.strip()
-                dept = el.find_element(By.CLASS_NAME, "dept").text.strip()
-                try:
-                    desc = el.find_element(By.CLASS_NAME, "summary").text.strip()
-                except:
-                    desc = ""
+            if "samsungcareers" in domain:
+                job_items = driver.find_elements(By.CSS_SELECTOR, ".recruit-list li")
+                for item in job_items:
+                    try:
+                        link_elem = item.find_element(By.CSS_SELECTOR, "a")
+                        link = link_elem.get_attribute("href")
+                        title = item.find_element(By.CSS_SELECTOR, ".title").text.strip()
+                        dept = item.find_element(By.CSS_SELECTOR, ".dept").text.strip()
+                        deadline = item.find_element(By.CSS_SELECTOR, ".date span:last-child").text.strip()
 
-                job = {
-                    "title": f"{title} - {dept}",
-                    "description": desc,
-                    "link": url,
-                    "career": "경력무관",
-                    "deadline": "상시채용"
-                }
-                jobs.append(job)
+                        jobs.append({
+                            "title": f"{dept} - {title}",
+                            "description": title,
+                            "link": link,
+                            "career": "경력무관",
+                            "deadline": deadline if deadline else "상시채용"
+                        })
+                    except:
+                        continue
+
         except Exception as e:
-            print(f"셀레니움 오류: {e}")
+            print("셀레니움 오류:", e)
         finally:
             driver.quit()
 
