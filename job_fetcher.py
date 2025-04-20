@@ -14,6 +14,8 @@ class JobFetcher:
         results = []
         for company in self.company_info:
             domain = company["크롤링 URL 도메인"]
+            if not domain:
+                continue  # 혹은 로그 출력
             company_name = company["회사명"]
 
             jobs = self._fetch_jobs_from_domain(domain)
