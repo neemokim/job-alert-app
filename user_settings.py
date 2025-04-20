@@ -3,7 +3,8 @@ from datetime import datetime
 from google_sheets_helper import (
     load_user_settings,
     save_user_settings,
-    read_admin_keywords
+    read_admin_keywords,
+    connect_to_sheet
 )
 
 class UserSettings:
@@ -61,13 +62,24 @@ class UserSettings:
         if 'manual_jobs' not in st.session_state:
             st.session_state.manual_jobs = []
         return st.session_state.manual_jobs
+
     def get_receivers(self):
-        return st.session_state.receivers
-    
+        sheet = connect_to_sheet("job-alert-settings", "userinfos")
+        return sheet.get_all_records()
+
     def update_receivers(self, receivers):
-        st.session_state.receivers = receivers
-        write_receivers(receivers)
-    
+        sheet = connect_to_sheet("job-alert-settings", "userinfos")
+        sheet.clear()
+        sheet.append_row(["이메일 주소", "활성화", "알림 시간", "알림 빈도", "경력 구분"])
+        for r in receivers:
+            sheet.append_row([
+                r.get("이메일 주소"),
+                str(r.get("활성화", True)).upper(),
+                r.get("알림 시간", ""),
+                r.get("빈도", "하루 1회"),
+                r.get("신입/경력", "경력")
+            ])
+
     def add_manual_job(self, url):
         st.session_state.manual_jobs.append({
             'company': "수동 추가",
@@ -79,4 +91,3 @@ class UserSettings:
             'deadline': "상시채용",
             'added_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
-
