@@ -19,16 +19,18 @@ new_email = st.text_input("이메일 주소 입력", placeholder="example@domain
 notification_times = st.multiselect(
     "알림 받을 시간 선택 (최대 2회)",
     ["오전 8:30", "오전 9:00", "오전 10:00", "오후 2:00", "오후 6:00", "오후 9:00"],
-    max_selections=2
+    max_selections=2,
+    key="ntimes"
 )
 
 notification_frequency = st.radio(
     "알림 빈도",
     ["하루 1회", "하루 2회"],
-    index=0
+    index=0,
+    key="freq"
 )
 
-career_option = st.selectbox("신입/경력 여부 선택", ["경력", "신입/경력", "경력무관"])
+career_option = st.selectbox("신입/경력 여부 선택", ["경력", "신입/경력", "경력무관"], key="career")
 
 # --- 신청 버튼 ---
 if st.button("📩 알림 신청하기"):
@@ -37,8 +39,13 @@ if st.button("📩 알림 신청하기"):
     elif not notification_times:
         st.warning("알림 시간을 1개 이상 선택하세요.")
     else:
-        receivers = user_settings.get_receivers()
-        exists = any(r["이메일 주소"] == new_email for r in receivers)
+        try:
+            receivers = user_settings.get_receivers()
+        except Exception as e:
+            st.error(f"알림 신청 정보를 불러올 수 없습니다: {e}")
+            receivers = []
+
+        exists = any(r.get("이메일 주소") == new_email for r in receivers)
         if exists:
             st.warning("이미 등록된 이메일입니다.")
         else:
@@ -57,10 +64,15 @@ st.divider()
 st.subheader("🛑 수신 거부")
 unsub_email = st.text_input("수신 거부할 이메일 입력", key="unsubscribe")
 if st.button("❌ 수신 거부"):
-    receivers = user_settings.get_receivers()
+    try:
+        receivers = user_settings.get_receivers()
+    except Exception as e:
+        st.error(f"수신 거부 정보를 불러올 수 없습니다: {e}")
+        receivers = []
+
     found = False
     for r in receivers:
-        if r["이메일 주소"] == unsub_email:
+        if r.get("이메일 주소") == unsub_email:
             r["활성화"] = False
             found = True
     if found:
@@ -75,7 +87,12 @@ if st.button("🔄 지금 채용 공고 발송"):
     with st.spinner("채용 공고 수집 및 발송중..."):
         keywords = user_settings.get_keywords()
         jobs = job_fetcher.fetch_all_jobs(keywords)
-        receivers = user_settings.get_receivers()
+        try:
+            receivers = user_settings.get_receivers()
+        except Exception as e:
+            st.error(f"수신자 목록을 불러올 수 없습니다: {e}")
+            receivers = []
+
         active_receivers = [r for r in receivers if r.get("활성화")]
         if jobs and active_receivers:
             for r in active_receivers:
