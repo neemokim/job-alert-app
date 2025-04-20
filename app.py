@@ -101,28 +101,25 @@ if st.button("❌ 수신 거부"):
 st.divider()
 if st.button("🔄 지금 채용 공고 발송"):
     with st.spinner("채용 공고 수집 및 발송중..."):
+        keywords = user_settings.get_keywords()
+        career_filter = ["경력", "신입/경력", "경력무관"]
+        jobs = job_fetcher.fetch_all_jobs(keywords=keywords, career_filter=career_filter)
+
         try:
             receivers = user_settings.get_receivers()
         except AttributeError:
-            st.error("user_settings에 get_receivers() 메서드가 없습니다. user_settings.py 파일을 확인해주세요.")
+            st.error("user_settings에 get_receivers() 메서드가 없습니다.")
             receivers = []
         except Exception as e:
-            st.error(f"수신자 목록을 불러올 수 없습니다: {e}")
+            st.error(f"수신자 목록 불러오기 실패: {e}")
             receivers = []
 
         active_receivers = [r for r in receivers if r.get("활성화")]
+
+        # ✅ 새 공고가 없어도 무조건 발송
         if active_receivers:
             for r in active_receivers:
-                # 사용자별 경력 필터
-                career = r.get("경력 구분", "경력")
-                career_filter = [career]  # 리스트 형태로 넘기기
-                keywords = user_settings.get_keywords()
-
-                jobs = job_fetcher.fetch_all_jobs(keywords=keywords, career_filter=career_filter)
-
-                if jobs:
-                    email_sender.send_email(r["이메일 주소"], jobs)
-
+                email_sender.send_email(r["이메일 주소"], jobs)  # jobs가 0건이어도 발송
             st.success("모든 사용자에게 이메일이 발송되었습니다!")
         else:
-            st.info("보낼 공고나 대상자가 없습니다.")
+            st.info("보낼 대상자가 없습니다.")
