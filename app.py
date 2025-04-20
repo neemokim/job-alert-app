@@ -86,7 +86,7 @@ def main():
         "경력 선택",
         ["경력", "신입/경력", "경력무관"],
         default=["경력", "신입/경력"]
-        
+    )   
             # ✅ 2. 기존 main 코드 진행
     user_settings = UserSettings()
     job_fetcher = JobFetcher()
