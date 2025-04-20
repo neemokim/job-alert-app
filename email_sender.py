@@ -1,13 +1,24 @@
+import streamlit as st
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
 from datetime import datetime
+import yagmail
+
 
 class EmailSender:
     def __init__(self, smtp_server="smtp.gmail.com", smtp_port=587):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
+    def send_email(self, receiver_email, jobs):
+        email_settings = {
+            "sender_email": st.secrets["SENDER_EMAIL"],
+            "sender_password": st.secrets["SENDER_PASSWORD"],
+            "receivers": [{"이메일 주소": receiver_email, "활성화": True}]
+        }
+        self.send_job_alerts(jobs, email_settings)
+
     
     def send_job_alerts(self, jobs, email_settings):
         if not jobs:
