@@ -47,7 +47,10 @@ def save_user_settings(email, active, times, frequency, career):
 def read_admin_keywords():
     sheet = connect_to_sheet("job-alert-settings", "keywords")
     return [row[0] for row in sheet.get_all_values()[1:] if row and row[0].strip()]
-
+@st.cache_data(ttl=60)  # 캐싱해서 60초간 유지
+def get_keywords():
+    return read_admin_keywords()
+    
 # --- 크롤링 대상 기업 정보 불러오기 ---
 def read_company_settings():
     sheet = connect_to_sheet("job-alert-settings", "settings")
