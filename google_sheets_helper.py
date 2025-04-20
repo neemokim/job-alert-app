@@ -1,3 +1,8 @@
+import streamlit as st  # 반드시 가장 먼저 있어야 함
+import gspread
+from google.oauth2.service_account import Credentials
+
+
 def connect_to_sheet(sheet_name, tab_name):
     scope = [
         "https://www.googleapis.com/auth/spreadsheets",
