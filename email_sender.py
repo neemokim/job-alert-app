@@ -59,38 +59,65 @@ class EmailSender:
         
         return message
     
-    def _create_html_content(self, jobs):
-        html = """
-        <html>
-            <head>
-                <style>
-                    .job-card {
-                        border: 1px solid #eee;
-                        padding: 15px;
-                        margin: 10px 0;
-                        border-radius: 5px;
-                    }
-                    .company-name {
-                        color: #666;
-                        font-size: 14px;
-                    }
-                    .deadline {
-                        color: #ff4444;
-                        font-size: 14px;
-                    }
-                    .job-link {
-                        color: #0066cc;
-                        text-decoration: none;
-                    }
-                    .job-link:hover {
-                        text-decoration: underline;
-                    }
-                </style>
-            </head>
-            <body>
-                <h2>새로운 채용 공고가 등록되었습니다.</h2>
+   def _create_html_content(self, jobs):
+    html = """
+    <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    line-height: 1.6;
+                    padding: 10px;
+                }
+                .job-card {
+                    margin-bottom: 25px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 15px;
+                }
+                .company {
+                    font-size: 15px;
+                    font-weight: bold;
+                    color: #333;
+                }
+                .job-title {
+                    font-size: 16px;
+                    margin: 5px 0;
+                    color: #222;
+                }
+                .deadline {
+                    font-size: 14px;
+                    color: #888;
+                }
+                a {
+                    color: #1a73e8;
+                    text-decoration: none;
+                    font-weight: bold;
+                }
+                a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>📣 신규 채용 공고 알림</h2>
+    """
+
+    for job in jobs:
+        html += f"""
+        <div class="job-card">
+            <div class="company">📌 {job['company']}</div>
+            <div class="job-title">"{job['title']} ({job.get('career', '경력무관')})"</div>
+            <div class="deadline">🗓 마감일: {job.get('deadline', '상시채용')}</div>
+            <div>🔗 <a href="{job['link']}" target="_blank">공고 바로가기</a></div>
+        </div>
         """
-        
+
+    html += """
+        </body>
+    </html>
+    """
+    return html
+    
         for job in jobs:
             html += f"""
                 <div class="job-card">
