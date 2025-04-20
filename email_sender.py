@@ -59,7 +59,7 @@ class EmailSender:
         
         return message
     
-       def _create_html_content(self, jobs):
+     def _create_html_content(self, jobs):
         html = """
         <html>
             <head>
