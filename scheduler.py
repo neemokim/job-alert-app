@@ -37,16 +37,21 @@ class JobScheduler:
                 schedule.every().day.at(self._normalize_time(t)).do(self._run_job, email=user["이메일 주소"])
 
     def _normalize_time(self, time_str):
-        try:
-            if "오전" in time_str:
-                hour, minute = map(int, time_str.replace("오전 ", "").split(":"))
-                if hour == 12: hour = 0
-            else:
-                hour, minute = map(int, time_str.replace("오후 ", "").split(":"))
-                if hour != 12: hour += 12
-            return f"{hour:02d}:{minute:02d}"
-        except:
-            return "09:00"
+        """'오전 9:00' 같은 시간 형식을 '09:00'처럼 변환"""
+        if "오전" in time_str:
+            time = time_str.replace("오전 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour == 12:
+                hour = 0
+        elif "오후" in time_str:
+            time = time_str.replace("오후 ", "")
+            hour, minute = map(int, time.split(":"))
+            if hour != 12:
+                hour += 12
+        else:
+            hour, minute = map(int, time_str.split(":"))  # 이미 24시간제일 경우
+    
+        return f"{hour:02d}:{minute:02d}"
 
     def _get_all_users(self):
         from google_sheets_helper import connect_to_sheet
